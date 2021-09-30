@@ -1,26 +1,30 @@
 require 'json'
-# require 'open-uri'
+require 'open-uri'
+require 'uri'
 
 class LocationController < ApplicationController
-  # before_action :set_default_response_format
 
   def search
     @gps = find_location(params[:lat],params[:lng])
-
+    p @gps
     render json: @gps
-    # render json: { message: "Successfully updated" }
   end
 
-  # private
+  private
 
   def request_api(url)
     response = URI.open(url)
-    p response
+    response_read = response.read() 
 
-    return nil if response.status != 200
+    return nil if response.status[0] != "200"
 
-    # @json = JSON.parse(response.body)
-    @json = JSON.parse(response.body)
+    @json = JSON.parse(response_read)
+    @gps = {}
+    @json["features"].each do |item|
+      @gps[item["id"]] = [item["place_name"]]
+      p @gps
+    end
+    return @gps 
 
   end
 
@@ -29,8 +33,4 @@ class LocationController < ApplicationController
       "https://api.mapbox.com/geocoding/v5/mapbox.places/#{lng},#{lat}.json?access_token=#{ENV["MAPBOX_API_KEY"]}"
     )
   end
-
-  # def set_default_response_format
-  #   request.format = :json
-  # end
 end
